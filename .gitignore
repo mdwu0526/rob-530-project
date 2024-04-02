@@ -1,0 +1,9 @@
+# ignore all rosbag files
+*.bag
+
+# ignore any images
+*.jpg
+*.jpeg
+*.png
+data/images/*
+data/bags/*

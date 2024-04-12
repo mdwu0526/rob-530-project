@@ -51,60 +51,56 @@ class InEKF:
         self.mu = self.mu @ expm(u_se2)
         self.Sigma = self.Sigma + AdjX @ self.W @ AdjX.T
         
-    # def correction(self, Y1, Y2, z, landmarks, mu_pred, sigma_pred):
-    #     landmark1 = landmarks.getLandmark(z[2].astype(int))
-    #     landmark2 = landmarks.getLandmark(z[5].astype(int))
-    #     self.mu_pred = mu_pred
-    #     self.sigma_pred = sigma_pred
-    #     ###############################################################################
-    #     # TODO: Implement the correction step for InEKF                               #
-    #     # Hint: save your corrected state and cov as X and self.Sigma                 #
-    #     # Hint: you can use landmark1.getPosition()[0] to get the x position of 1st   #
-    #     #       landmark, and landmark1.getPosition()[1] to get its y position        #
-    #     ###############################################################################
-    #     b1 = np.array([landmark1.getPosition()[0], landmark1.getPosition()[1], 1])
-    #     b2 = np.array([landmark2.getPosition()[0], landmark2.getPosition()[1], 1])
-    #     b = np.hstack((b1, b2))
-    #     Y = np.hstack((Y1, Y2))
-    #     H_1 = np.array([[b1[1], -1, 0], [-b1[0], 0, -1]])
-    #     H_2 = np.array([[b2[1], -1, 0], [-b2[0], 0, -1]])
-    #     H = np.vstack((H_1, H_2))
-    #     N = mu_pred @ block_diag(self.V, 0) @ mu_pred.T
-    #     N = block_diag(N[0:2, 0:2], N[0:2, 0:2])
-    #     S = H @ sigma_pred @ H.T + N
-    #     L = sigma_pred @ H.T @ np.linalg.inv(S)
-        
-    #     # Update state
-    #     nu = block_diag(mu_pred, mu_pred) @ Y - b
-    #     nu = np.hstack((nu[0:2],nu[3:5]))
-        
-    #     def wedge(phi):
-    #         """
-    #         R^3 vector to so(3) matrix
-    #         @param  phi: R^3
-    #         @return Phi: so(3) matrix
-    #         """
-    #         G1 = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 0]])
-    #         G2 = np.array([[0, 0, 1], [0, 0, 0], [0, 0, 0]])
-    #         G3 = np.array([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
-    #         Phi = G1 * phi[2] + G2 * phi[0] + G3 * phi[1]
-    #         return Phi
-        
-    #     delta = wedge(L @ nu)
-        
-    #     self.mu = expm(delta) @ mu_pred
-        
-    #     X = np.array([self.mu[0, 2], self.mu[1, 2], wrap2Pi(np.arctan2(self.mu[1, 0], self.mu[0, 0]))])
-        
-    #     # Update covariance
-    #     self.Sigma = (np.eye(3) - L @ H) @ self.Sigma @ (np.eye(3) - L @ H).T + L @ N @ L.T
+    def correction(self, Y1, Y2, z, landmarks):
+        """
+        landmarks: dictionary(key=id, value=[x,y])
+        z: [id, long, lat]
+        """
+        ###############################################################################
+        # TODO: Implement the correction step for InEKF                               #
+        # Hint: save your corrected state and cov as X and self.Sigma                 #
+        # Hint: you can use landmark1.getPosition()[0] to get the x position of 1st   #
+        #       landmark, and landmark1.getPosition()[1] to get its y position        #
+        ###############################################################################
+        G1 = np.zeros((3,3))
+        G1[0,2] = 1
+        G2 = np.zeros((3,3))
+        G2[1,2] = 1
+        G3 = np.zeros((3,3))
+        G3[0,1] = -1
+        G3[1,0] = 1
 
-    #     ###############################################################################
-    #     #                         END OF YOUR CODE                                    #
-    #     ###############################################################################
-    #     self.state_.setState(X)
-    #     self.state_.setCovariance(self.Sigma)
-    #     return np.copy(X), np.copy(self.Sigma), np.copy(self.mu)
+        landmark_gt = landmarks[z[0]]      #[x_gt, y_gt]
+
+        b = np.array([landmark_gt[0], landmark_gt[1],1])
+        H = np.array([[-1,0,landmark_gt[1]],\
+                      [0,-1,-landmark_gt[0]]])
+
+        R = self.mu_pred[:2,:2]
+        R = block_diag(R,R)
+        nu1 = self.mu_pred @ Y1.T - b1
+        nu2 = self.mu_pred @ Y2.T - b2
+
+        N = R @ block_diag(self.V, self.V) @ R.T
+        S = H @ self.sigma_pred @ H.T + N
+        K = self.sigma_pred @ H.T @ np.linalg.inv(S)
+
+        temp = np.zeros((2,3))
+        temp[:2,:2] = np.eye(2)
+        delta1 = K[:3,:2] @ temp @ nu1
+        delta2 = K[:3,2:4] @ temp @ nu2
+        delta = delta1 + delta2
+        self.mu = np.dot(expm(delta[0] * G1 + delta[1] * G2 + delta[2] * G3), self.mu_pred)
+        self.Sigma = (np.eye(3) - K @ H) @ self.sigma_pred @ (np.eye(3) - K @ H).T + K @ N @ K.T
+
+        X = np.array([self.mu[0,2], self.mu[1,2], np.arctan2(self.mu[1,0], self.mu[0,0])])
+
+        ###############################################################################
+        #                         END OF YOUR CODE                                    #
+        ###############################################################################
+        self.state_.setState(X)
+        self.state_.setCovariance(self.Sigma)
+        return np.copy(X), np.copy(self.Sigma), np.copy(self.mu)
 
     def getState(self):
         return deepcopy(self.state_)

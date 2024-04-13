@@ -75,15 +75,20 @@ def main():
         noisy_motion = np.zeros(2)
         # noisy_motion[0] = np.random.normal(u[0], np.sqrt(alphas[0]*trans_vel**2+alphas[1]*angular_vel**2))
         # noisy_motion[1] = np.random.normal(u[1], np.sqrt(alphas[2]*trans_vel**2+alphas[3]*angular_vel**2))
-        noisy_motion[0] = np.random.normal(u[0], np.sqrt(0.001))
-        noisy_motion[1] = np.random.normal(u[1], np.sqrt(0.001))
+        noisy_motion[0] = np.random.normal(u[0], np.sqrt(0.05))
+        noisy_motion[1] = np.random.normal(u[1], np.sqrt(0.05))
         filter.prediction(noisy_motion, dt)
-        Y1 = np.array([data['apriltag 1 longitude'][i] / 1000, data['apriltag 1 latitude'][i] / 1000, 1])
-        Y2 = np.array([data['apriltag 2 longitude'][i] / 1000, data['apriltag 2 latitude'][i] / 1000, 1])
+        # Y1 = np.array([data['apriltag 1 longitude'][i] / 1000, data['apriltag 1 latitude'][i] / 1000, 1])
+        # Y2 = np.array([data['apriltag 2 longitude'][i] / 1000, data['apriltag 2 latitude'][i] / 1000, 1])
+        Y1 = np.array([np.arctan2(data['apriltag 1 latitude'][i], data['apriltag 1 longitude'][i]), np.sqrt((data['apriltag 1 latitude'][i]/1000) ** 2 + (data['apriltag 1 longitude'][i]/1000) ** 2)])
+        Y2 = np.array([np.arctan2(data['apriltag 2 latitude'][i], data['apriltag 2 longitude'][i]), np.sqrt((data['apriltag 1 latitude'][i]/1000) ** 2 + (data['apriltag 1 longitude'][i]/1000) ** 2)])
+
         if data['apriltag 1 id'][i] != -1 and data['apriltag 2 id'][i] != -1:
+            Y1 = np.array([np.arctan2(data['apriltag 1 latitude'][i], data['apriltag 1 longitude'][i]), np.sqrt((data['apriltag 1 latitude'][i]/1000) ** 2 + (data['apriltag 1 longitude'][i]/1000) ** 2), 1])
+            Y2 = np.array([np.arctan2(data['apriltag 2 latitude'][i], data['apriltag 2 longitude'][i]), np.sqrt((data['apriltag 1 latitude'][i]/1000) ** 2 + (data['apriltag 1 longitude'][i]/1000) ** 2), 1])
             filter.correction(Y1, Y2, landmarks)
         state = state_vect(filter.mu)
-        print(state)
+        # print(state)
         if state_log.shape[1] == 0:
             state_log[:] = state[0:2]
             odom_log[:] = np.array([data['odometry x'][i], data['odometry y'][i]])
@@ -91,8 +96,11 @@ def main():
             state_log = np.hstack((state_log, state[0:2].reshape(-1,1)))
             odom_log = np.hstack((odom_log, np.array([data['odometry x'][i], data['odometry y'][i]]).reshape(-1,1)))
         last_time = curr_time
-    plt.plot(state_log[0,:], state_log[1,:])
-    plt.plot(odom_log[0,:], odom_log[1,:])
+    plt.scatter(state_log[0,:], state_log[1,:])
+    plt.scatter(odom_log[0,:], odom_log[1,:])
+    plt.scatter(landmarks['80'][0], landmarks['80'][1])
+    plt.scatter(landmarks['20'][0], landmarks['20'][1])
+    plt.legend(['State', 'Odom', 'ATAG1', 'ATAG2'])
     plt.show()
 
 

@@ -49,7 +49,7 @@ def main():
     #     print(state_log.shape)
     #     plt.plot(state_log[0,:], state_log[1,:])
     #     plt.show()
-    csv_filename = 'untitled.csv'
+    csv_filename = 'log_5.csv'
     data = loadData(csv_filename)
     data = processData(data)
     init_x = data['odometry x'][0]

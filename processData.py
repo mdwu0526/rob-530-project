@@ -18,17 +18,22 @@ def processData(data):
 
     for i in range(len(data['utime'])):
         data['utime'][i] = (float(data['utime'][i]) - base_time) / 1000000
-        data['apriltag id'][i] = int(data['apriltag id'][i])
-        data['apriltag world_x'][i] = float(data['apriltag world_x'][i])
-        data['apriltag world_y'][i] = float(data['apriltag world_y'][i])
+        data['apriltag 1 id'][i] = int(data['apriltag 1 id'][i])
+        data['apriltag 1 world x'][i] = float(data['apriltag 1 world x'][i])
+        data['apriltag 1 world y'][i] = float(data['apriltag 1 world y'][i])
+        data['apriltag 2 id'][i] = int(data['apriltag 2 id'][i])
+        data['apriltag 2 world x'][i] = float(data['apriltag 2 world x'][i])
+        data['apriltag 2 world y'][i] = float(data['apriltag 2 world y'][i])
         data['odometry x'][i] = float(data['odometry x'][i])
         data['odometry y'][i] = float(data['odometry y'][i])
         data['odometry theta'][i] = float(data['odometry theta'][i])
         data['vel vx'][i] = float(data['vel vx'][i])
         data['vel vy'][i] = float(data['vel vy'][i])
         data['vel wz'][i] = float(data['vel wz'][i])
-        data['apriltag longitude'][i] = float(data['apriltag longitude'][i])
-        data['apriltag latitude'][i] = float(data['apriltag latitude'][i])
+        data['apriltag 1 longitude'][i] = float(data['apriltag 1 longitude'][i])
+        data['apriltag 1 latitude'][i] = float(data['apriltag 1 latitude'][i])
+        data['apriltag 2 longitude'][i] = float(data['apriltag 2 longitude'][i])
+        data['apriltag 2 latitude'][i] = float(data['apriltag 2 latitude'][i])
         
     return data
     

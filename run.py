@@ -63,8 +63,8 @@ def main():
     state_log = np.zeros((2,1))
     odom_log = np.zeros((2,1))
     landmarks = {}
-    landmarks['80'] = np.array([-40.5, 615])
-    landmarks['20'] = np.array([-40.5, 575])
+    landmarks['80'] = np.array([-40.5, 615]) / 100
+    landmarks['20'] = np.array([-40.5, 575]) / 100
     for i in range(1,len(data['utime'])):
         last_time = data['utime'][i-1]
         curr_time = data['utime'][i]
@@ -78,7 +78,10 @@ def main():
         noisy_motion[0] = np.random.normal(u[0], np.sqrt(0.001))
         noisy_motion[1] = np.random.normal(u[1], np.sqrt(0.001))
         filter.prediction(noisy_motion, dt)
-        filter.correction()
+        Y1 = np.array([data['apriltag 1 longitude'][i] / 1000, data['apriltag 1 latitude'][i] / 1000, 1])
+        Y2 = np.array([data['apriltag 2 longitude'][i] / 1000, data['apriltag 2 latitude'][i] / 1000, 1])
+        if data['apriltag 1 id'][i] != -1 and data['apriltag 2 id'][i] != -1:
+            filter.correction(Y1, Y2, landmarks)
         state = state_vect(filter.mu)
         print(state)
         if state_log.shape[1] == 0:

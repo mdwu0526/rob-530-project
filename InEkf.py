@@ -1,3 +1,4 @@
+
 from mimetypes import init
 from os import stat
 from statistics import mean
@@ -53,11 +54,11 @@ class InEKF:
         
         # return np.copy(self.mu), np.copy(self.Sigma)
         
-    def correction(self, Y1, Y2, z, landmarks):
+    def correction(self, Y1, Y2, landmarks):
         """
         landmarks: dictionary(key=id, value=[x,y])
-        z: [id, long, lat]
-        Y1: Landmark 1 position relative to the robot
+        Y1: Landmark 1 [long, lat]
+        Y2: Landmark 2 [long, lat]
         """
         ###############################################################################
         # TODO: Implement the correction step for InEKF                               #
@@ -73,8 +74,8 @@ class InEKF:
         G3[0,1] = -1
         G3[1,0] = 1
 
-        landmark_gt1 = landmarks[z[0]]      #[x_gt, y_gt]
-        landmark_gt2 = landmarks[z[0]] 
+        landmark_gt1 = landmarks['80']     #[x_gt, y_gt]
+        landmark_gt2 = landmarks['20'] 
 
         b1 = np.array([landmark_gt1[0], landmark_gt1[1],1])
         H1 = np.array([[-1,0,landmark_gt1[1]],
@@ -84,13 +85,14 @@ class InEKF:
         H2 = np.array([[-1,0,landmark_gt2[1]],
                       [0,-1,-landmark_gt2[0]]])
         
-        b = np.vstack((b1,b2))
-        H = np.vstack((H1,H2))
+        b = np.hstack((b1,b2)) # 1x6
+        H = np.vstack((H1,H2)) # 4x3
         
-        Y = np.vstack((Y1,Y2))
-        nu = self.mu @ Y.T - b
+        Y = np.hstack((Y1,Y2)) # 
+        # nu = self.mu @ Y.T - b # b = 2x3, self.mu = 3x3, Y.T = 2x2
 
-        N = self.mu @ block_diag(self.V,0) @ self.mu.T
+        N = self.mu @ block_diag(self.V,0) @ self.mu.T # 3x3
+        N = block_diag(N[0:2, 0:2], N[0:2, 0:2])
         S = H @ self.Sigma @ H.T + N
         K = self.Sigma @ H.T @ np.linalg.inv(S)
 
@@ -99,8 +101,8 @@ class InEKF:
         
         delta = K @ nu
 
-        self.mu = np.dot(expm(delta[0] * G1 + delta[1] * G2 + delta[2] * G3), self.mu_pred)
-        self.Sigma = (np.eye(3) - K @ H) @ self.sigma_pred @ (np.eye(3) - K @ H).T + K @ N @ K.T
+        self.mu = np.dot(expm(delta[0] * G1 + delta[1] * G2 + delta[2] * G3), self.mu)
+        self.Sigma = (np.eye(3) - K @ H) @ self.Sigma @ (np.eye(3) - K @ H).T + K @ N @ K.T
 
         ###############################################################################
         #                         END OF YOUR CODE                                    #

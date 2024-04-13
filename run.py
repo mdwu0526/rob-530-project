@@ -62,6 +62,9 @@ def main():
     last_time = 0
     state_log = np.zeros((2,1))
     odom_log = np.zeros((2,1))
+    landmarks = {}
+    landmarks['80'] = np.array([-40.5, 615])
+    landmarks['20'] = np.array([-40.5, 575])
     for i in range(1,len(data['utime'])):
         last_time = data['utime'][i-1]
         curr_time = data['utime'][i]

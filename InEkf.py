@@ -51,10 +51,13 @@ class InEKF:
         self.mu = self.mu @ expm(u_se2)
         self.Sigma = self.Sigma + AdjX @ self.W @ AdjX.T
         
+        # return np.copy(self.mu), np.copy(self.Sigma)
+        
     def correction(self, Y1, Y2, z, landmarks):
         """
         landmarks: dictionary(key=id, value=[x,y])
         z: [id, long, lat]
+        Y1: Landmark 1 position relative to the robot
         """
         ###############################################################################
         # TODO: Implement the correction step for InEKF                               #
@@ -70,37 +73,41 @@ class InEKF:
         G3[0,1] = -1
         G3[1,0] = 1
 
-        landmark_gt = landmarks[z[0]]      #[x_gt, y_gt]
+        landmark_gt1 = landmarks[z[0]]      #[x_gt, y_gt]
+        landmark_gt2 = landmarks[z[0]] 
 
-        b = np.array([landmark_gt[0], landmark_gt[1],1])
-        H = np.array([[-1,0,landmark_gt[1]],\
-                      [0,-1,-landmark_gt[0]]])
+        b1 = np.array([landmark_gt1[0], landmark_gt1[1],1])
+        H1 = np.array([[-1,0,landmark_gt1[1]],
+                      [0,-1,-landmark_gt1[0]]])
 
-        R = self.mu_pred[:2,:2]
-        R = block_diag(R,R)
-        nu1 = self.mu_pred @ Y1.T - b1
-        nu2 = self.mu_pred @ Y2.T - b2
+        b2 = np.array([landmark_gt2[0], landmark_gt2[1],1])
+        H2 = np.array([[-1,0,landmark_gt2[1]],
+                      [0,-1,-landmark_gt2[0]]])
+        
+        b = np.vstack((b1,b2))
+        H = np.vstack((H1,H2))
+        
+        Y = np.vstack((Y1,Y2))
+        nu = self.mu @ Y.T - b
 
-        N = R @ block_diag(self.V, self.V) @ R.T
-        S = H @ self.sigma_pred @ H.T + N
-        K = self.sigma_pred @ H.T @ np.linalg.inv(S)
+        N = self.mu @ block_diag(self.V,0) @ self.mu.T
+        S = H @ self.Sigma @ H.T + N
+        K = self.Sigma @ H.T @ np.linalg.inv(S)
 
-        temp = np.zeros((2,3))
-        temp[:2,:2] = np.eye(2)
-        delta1 = K[:3,:2] @ temp @ nu1
-        delta2 = K[:3,2:4] @ temp @ nu2
-        delta = delta1 + delta2
+        nu = block_diag(self.mu, self.mu) @ Y - b
+        nu = np.hstack((nu[0:2],nu[3:5]))
+        
+        delta = K @ nu
+
         self.mu = np.dot(expm(delta[0] * G1 + delta[1] * G2 + delta[2] * G3), self.mu_pred)
         self.Sigma = (np.eye(3) - K @ H) @ self.sigma_pred @ (np.eye(3) - K @ H).T + K @ N @ K.T
-
-        X = np.array([self.mu[0,2], self.mu[1,2], np.arctan2(self.mu[1,0], self.mu[0,0])])
 
         ###############################################################################
         #                         END OF YOUR CODE                                    #
         ###############################################################################
-        self.state_.setState(X)
-        self.state_.setCovariance(self.Sigma)
-        return np.copy(X), np.copy(self.Sigma), np.copy(self.mu)
+        # self.state_.setState(X)
+        # self.state_.setCovariance(self.Sigma)
+        # return np.copy(X), np.copy(self.Sigma), np.copy(self.mu)
 
     def getState(self):
         return deepcopy(self.state_)

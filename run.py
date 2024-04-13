@@ -75,6 +75,7 @@ def main():
         noisy_motion[0] = np.random.normal(u[0], np.sqrt(0.001))
         noisy_motion[1] = np.random.normal(u[1], np.sqrt(0.001))
         filter.prediction(noisy_motion, dt)
+        filter.correction()
         state = state_vect(filter.mu)
         print(state)
         if state_log.shape[1] == 0:

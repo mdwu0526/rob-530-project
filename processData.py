@@ -2,7 +2,7 @@ import csv
 import numpy as np
         
 def loadData(filename):        
-    with open(filename, mode = 'r', newline = '') as file:
+    with open(filename, mode = 'r', newline = '', encoding='utf-8-sig') as file:
         reader = csv.reader(file)
         headers = next(reader)
         out = {header: [] for header in headers}
@@ -19,11 +19,7 @@ def processData(data):
     for i in range(len(data['utime'])):
         data['utime'][i] = (float(data['utime'][i]) - base_time) / 1000000
         data['apriltag 1 id'][i] = int(data['apriltag 1 id'][i])
-        data['apriltag 1 world x'][i] = float(data['apriltag 1 world x'][i])
-        data['apriltag 1 world y'][i] = float(data['apriltag 1 world y'][i])
         data['apriltag 2 id'][i] = int(data['apriltag 2 id'][i])
-        data['apriltag 2 world x'][i] = float(data['apriltag 2 world x'][i])
-        data['apriltag 2 world y'][i] = float(data['apriltag 2 world y'][i])
         data['odometry x'][i] = float(data['odometry x'][i])
         data['odometry y'][i] = float(data['odometry y'][i])
         data['odometry theta'][i] = float(data['odometry theta'][i])

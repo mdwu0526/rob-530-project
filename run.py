@@ -1,27 +1,23 @@
 import csv
 from InEkf import *
-import matplotlib.pyplot as plt
 from processData import *
 from utils import *
 
+ANIMATE = False
+LOG = "log7"
+
 def main():
-    csv_filename = 'data/log7/log_merged.csv'
+    csv_filename = 'data/' + LOG + '/log_merged.csv'
     data = loadData(csv_filename)
     data = processData(data)
     init_state = getInitialState(data)
+    landmarks = getLandmarks('data/' + LOG + '/landmarks.csv')
     filter = InEKF(init_state)
 
     curr_time = 0
     last_time = 0
     state_log = np.zeros((2,1))
     odom_log = np.zeros((2,1))
-    landmarks = {}
-    landmarks[1] = np.array([3.68, 1.8])
-    landmarks[3] = np.array([3.12, 1.8])
-    landmarks[5] = np.array([1.4, 6.24])
-    landmarks[6] = np.array([1.4, 5.68])
-    landmarks[7] = np.array([-0.28, 5.96-2.4])
-    landmarks[8] = np.array([0.28, 5.96-2.4])
     for i in range(0,len(data['utime'])):
         print(i)
         if data['vel vx'][i] != None:
@@ -42,21 +38,15 @@ def main():
         else:
             state_log = np.hstack((state_log, state[0:2].reshape(-1,1)))
 
-    plt.cla()
-    plt.plot(state_log[0,:], state_log[1,:])
-    plt.scatter(landmarks[1][0], landmarks[1][1])
-    plt.scatter(landmarks[3][0], landmarks[3][1])
-    plt.scatter(landmarks[5][0], landmarks[5][1])
-    plt.scatter(landmarks[6][0], landmarks[6][1])
-    plt.scatter(landmarks[7][0], landmarks[7][1])
-    plt.scatter(landmarks[8][0], landmarks[8][1])
-    ELLIPSE = confidence_ellipse(filter.mu, np.linalg.cholesky(filter.Sigma))
-    plt.plot(ELLIPSE[:, 0], ELLIPSE[:, 1], color='red', alpha=0.7, linewidth=1.5)
-    plt.xlim(-2, 5)  # Setting x-axis limits from 0 to 6
-    plt.ylim(-1, 8)  # Setting y-axis limits from 0 to 12
-    plt.legend(['State', 'Odom'])
-    plt.savefig('./IMG/{}.png'.format(i))
-    plt.show()
+        if data['odometry x'][i] != None:
+            odom = np.array([data['odometry x'][i], data['odometry y'][i]])
+            if odom_log.shape[1] == 0:
+                odom_log[:] = odom
+            else:
+                odom_log = np.hstack((odom_log, odom.reshape(-1,1)))
 
+        
+        plotScene(landmarks, state_log, odom_log, filter, i, len(data['utime']), ANIMATE)
+        
 if __name__ == '__main__':
     main()

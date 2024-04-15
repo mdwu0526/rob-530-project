@@ -118,4 +118,11 @@ def mergeData(folder):
                                  odom_data["odometry theta"][odom_i]])
                 odom_i += 1
 
+def getLandmarks(file):
+    data = loadData(file)
+    landmarks = {}
+    for i in range(len(data['id'])):
+        landmarks[int(data['id'][i])] = np.array([float(data['x'][i]), float(data['y'][i])])
+    return(landmarks)
+
 mergeData("data/log7")

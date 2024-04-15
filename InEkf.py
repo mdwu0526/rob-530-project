@@ -14,15 +14,15 @@ from utils import *
 
 class InEKF:
     def __init__(self, init_state):
-        self.W = np.diag([0.25**2,0.25**2,0.5**2])     # motion noise covariance
-        self.V = 5*np.eye(2)                      # measurement noise covariance
+        self.W = np.diag([0.25**2,0.25**2,0.1**2])     # motion noise covariance
+        self.V = 0.01*np.eye(2)                      # measurement noise covariance
         
         self.mu = pose_mat(init_state)           # init_state will be the first odometry pose
         # SE(2) State
         # cos(theta)  -sin(theta)     x
         # sin(theta)   cos(theta)     y
         #     0           0           1
-        self.Sigma = np.diag([1, 1, 1])
+        self.Sigma = np.diag([0.001, 0.001, 0.005])
         # Covariance Matrix
         # var(x)      0       0
         #   0      var(y)     0
@@ -59,12 +59,6 @@ class InEKF:
         landmarks: dictionary(key=id, value=[x,y])
         z: [id1, long1, lat1, id2, long2, lat2]
         """
-        ###############################################################################
-        # TODO: Implement the correction step for InEKF                               #
-        # Hint: save your corrected state and cov as X and self.Sigma                 #
-        # Hint: you can use landmark1.getPosition()[0] to get the x position of 1st   #
-        #       landmark, and landmark1.getPosition()[1] to get its y position        #
-        ###############################################################################
         G1 = np.zeros((3,3))
         G1[0,2] = 1
         G2 = np.zeros((3,3))
@@ -78,8 +72,8 @@ class InEKF:
         id2 = z[3]
         long2 = z[4]
         lat2 = z[5]
-        Y1 = np.array([np.arctan2(lat1, long1), np.sqrt((lat1/1000) ** 2 + (long1/1000) ** 2), 1])
-        Y2 = np.array([np.arctan2(lat2, long2), np.sqrt((lat2/1000) ** 2 + (long2/1000) ** 2), 1])
+        Y1 = np.array([long1/1000, lat1/1000, 1])
+        Y2 = np.array([long2/1000, lat2/1000, 1])
 
         landmark_gt1 = landmarks[id1]     #[x_gt, y_gt]
         landmark_gt2 = landmarks[id2] 
@@ -94,9 +88,7 @@ class InEKF:
         
         b = np.hstack((b1,b2)) # 1x6
         H = np.vstack((H1,H2)) # 4x3
-        
         Y = np.hstack((Y1,Y2)) # 
-        # nu = self.mu @ Y.T - b # b = 2x3, self.mu = 3x3, Y.T = 2x2
 
         N = self.mu @ block_diag(self.V,0) @ self.mu.T # 3x3
         N = block_diag(N[0:2, 0:2], N[0:2, 0:2])
@@ -108,21 +100,8 @@ class InEKF:
         
         delta = K @ nu
 
-        self.mu = np.dot(expm(delta[0] * G1 + delta[1] * G2 + delta[2] * G3), self.mu)
+        self.mu = np.dot(expm(self.wedge(delta)), self.mu)
         self.Sigma = (np.eye(3) - K @ H) @ self.Sigma @ (np.eye(3) - K @ H).T + K @ N @ K.T
-
-        ###############################################################################
-        #                         END OF YOUR CODE                                    #
-        ###############################################################################
-        # self.state_.setState(X)
-        # self.state_.setCovariance(self.Sigma)
-        # return np.copy(X), np.copy(self.Sigma), np.copy(self.mu)
-
-    def getState(self):
-        return deepcopy(self.state_)
-
-    def setState(self, state):
-        self.state_ = state
 
     def gfun(self, mu, u, dt):
         k = 0.0000000000000000001
@@ -132,3 +111,16 @@ class InEKF:
         output[1] = mu[1] + ( u[0] / (u[1] + k) * np.cos(mu[2]) - u[0] / (u[1] + k) * np.cos(mu[2] + u[1]))
         output[2] = mu[2] + u[1]
         return output
+    
+    def wedge(self, x):
+        G1 = np.array([[0, 0, 1],
+                       [0, 0, 0],
+                       [0, 0, 0]])  # v_1
+        G2 = np.array([[0, 0, 0],
+                       [0, 0, 1],
+                       [0, 0, 0]])  # v_2
+        G3 = np.array([[0, -1, 0],
+                       [1, 0, 0],
+                       [0, 0, 0]])  # omega
+        xhat = G1 * x[0] + G2 * x[1] + G3 * x[2]
+        return xhat

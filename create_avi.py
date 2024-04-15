@@ -16,7 +16,3 @@ for i in range(1, N):
     v_w.write(img)
 
 v_w.release()
-
-
-
-

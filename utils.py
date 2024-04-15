@@ -45,3 +45,12 @@ def confidence_ellipse(X, L):
         temp = np.dot(X, expm(G1 * ell_se2_vec[0] + G2 * ell_se2_vec[1] + G3 * ell_se2_vec[2]))
         ELLIPSE[j, :] = np.array([temp[0, 2], temp[1, 2]])
     return ELLIPSE
+
+def getInitialState(data):
+    for i in range(len(data["utime"])):
+        if data["odometry x"][i] is not None:
+            init_x = data['odometry x'][i]
+            init_y = data['odometry y'][i]
+            init_theta = data['odometry theta'][i]
+            init_state = np.array([init_x, init_y, init_theta])
+            return init_state

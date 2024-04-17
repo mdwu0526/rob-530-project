@@ -52,7 +52,6 @@ def mergeData(folder):
         # write first row of headers
         writer.writerow(headers)
         while(odom_i < len(odom_data['utime']) or vel_i < len(vel_data['utime']) or apriltag_i < len(apriltag_data['utime'])-1):
-            print(vel_i, apriltag_i, odom_i)
             # write velocity
             if(vel_data['utime'][vel_i] <= apriltag_data['utime'][apriltag_i] 
                and vel_data['utime'][vel_i] <= odom_data['utime'][odom_i]):

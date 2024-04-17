@@ -48,7 +48,7 @@ class InEKF:
         # Right Invariant Error
         u_se2 = logm(np.linalg.inv(X_prev) @ X_pred) # twist
 
-        AdjX =  X_prev @ u_se2 @ np.linalg.inv(X_prev)
+        AdjX =  X_prev @ u_se2 @ np.linalg.inv(X_prev)         # maybe use X_pred?????
         self.mu = self.mu @ expm(u_se2)
         self.Sigma = self.Sigma + AdjX @ self.W @ AdjX.T
         
@@ -59,13 +59,6 @@ class InEKF:
         landmarks: dictionary(key=id, value=[x,y])
         z: [id1, long1, lat1, id2, long2, lat2]
         """
-        G1 = np.zeros((3,3))
-        G1[0,2] = 1
-        G2 = np.zeros((3,3))
-        G2[1,2] = 1
-        G3 = np.zeros((3,3))
-        G3[0,1] = -1
-        G3[1,0] = 1
         id1 = z[0]
         long1 = z[1]
         lat1 = z[2]

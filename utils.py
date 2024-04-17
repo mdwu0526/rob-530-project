@@ -1,8 +1,10 @@
 import numpy as np
 from scipy.linalg import logm, expm
 import matplotlib.pyplot as plt
+from matplotlib.patches import Wedge
 import cv2 as cv
 import os
+import math
 
 def wrap2Pi(input):
     phases =  (( -input + np.pi) % (2.0 * np.pi ) - np.pi) * -1.0
@@ -23,27 +25,27 @@ def state_vect(mu):
 
 def confidence_ellipse(X, L):
     # create confidence ellipse
-    # se(2) Lie algebra basis twist = vec(omega, v1, v2)
-    G1 = np.array([[0, -1, 0],
-                   [1, 0, 0],
-                   [0, 0, 0]])
-    G2 = np.array([[0, 0, 1],
-                   [0, 0, 0],
-                   [0, 0, 0]])
-    G3 = np.array([[0, 0, 0],
-                   [0, 0, 1],
-                   [0, 0, 0]])
+    # se(2) Lie algebra basis twist = vec(v1, v2, omega)
+    G1 = np.array([[0, 0, 1],
+                    [0, 0, 0],
+                    [0, 0, 0]])
+    G2 = np.array([[0, 0, 0],
+                    [0, 0, 1],
+                    [0, 0, 0]])
+    G3 = np.array([[0, -1, 0],
+                    [1, 0, 0],
+                    [0, 0, 0]])
 
     # first create points from a unit circle + angle (third dimension of so(3))
     phi = np.arange(-np.pi, np.pi+0.01, 0.01)
-    circle = np.array([np.zeros([len(phi), 1]), np.cos(phi).reshape(-1, 1), np.sin(phi).reshape(-1, 1)]).reshape(3, -1)
+    circle = np.array([np.cos(phi), np.sin(phi), np.zeros(np.size(phi))]).T
     # Chi-squared 2-DOF 95% confidence (0.05): 7.815
     scale = np.sqrt(7.815)
     # main loop; iterate over the control inputs and move the robot
-    ELLIPSE = np.zeros([circle.shape[1], 2])  # covariance ellipse on manifold (nonlinear)
-    for j in range(circle.shape[1]):
+    ELLIPSE = np.zeros([np.shape(circle)[0], 2])  # covariance ellipse on manifold (nonlinear)
+    for j in range(np.shape(circle)[0]):
         # sample covariance on SE(2)
-        ell_se2_vec = scale * np.dot(L, circle[:, j])
+        ell_se2_vec = scale * L @ circle[j,:].reshape(-1,1)
         # retract and left-translate the ellipse on Lie algebra to SE(2) using Lie exp map
         temp = np.dot(X, expm(G1 * ell_se2_vec[0] + G2 * ell_se2_vec[1] + G3 * ell_se2_vec[2]))
         ELLIPSE[j, :] = np.array([temp[0, 2], temp[1, 2]])
@@ -60,27 +62,34 @@ def getInitialState(data):
         
 def plotScene(landmarks, state_log, odom_log, filter, i, data_len, ANIMATE):
     if ANIMATE or (i >= data_len-1):
+        fig, ax = plt.subplots()
         plt.cla()
-        plt.plot([0, 3.4, 3.4, 0, 0], [0, 0, 5.96, 5.96, 0])
-        plt.plot(state_log[0,:], state_log[1,:])
-        plt.plot(odom_log[0,:], odom_log[1,:])
-        plt.scatter(landmarks[1][0], landmarks[1][1])
-        plt.scatter(landmarks[3][0], landmarks[3][1])
-        plt.scatter(landmarks[5][0], landmarks[5][1])
-        plt.scatter(landmarks[6][0], landmarks[6][1])
-        plt.scatter(landmarks[7][0], landmarks[7][1])
-        plt.scatter(landmarks[8][0], landmarks[8][1])
+        gt = ax.plot([0, 3.4, 3.4, 0, 0], [0, 0, 5.96, 5.96, 0])
+        states = ax.plot(state_log[0,:], state_log[1,:])
+        wedge = Wedge(center=(state_log[0,i], state_log[1,i]), 
+                      r=1, 
+                      theta1 = math.degrees(state_vect(filter.mu)[2] - 2*np.sqrt(filter.Sigma[2,2])), 
+                      theta2 = math.degrees(state_vect(filter.mu)[2] + 2*np.sqrt(filter.Sigma[2,2])),
+                      color='green', 
+                      alpha=0.5)
+        ax.add_patch(wedge)
+        ax.set_aspect('equal', 'box')
+        odoms = ax.plot(odom_log[0,:], odom_log[1,:])
+        for id in landmarks:
+            lmrks = ax.scatter(landmarks[id][0], landmarks[id][1], color = 'hotpink', marker='*')
         ELLIPSE = confidence_ellipse(filter.mu, np.linalg.cholesky(filter.Sigma))
         plt.plot(ELLIPSE[:, 0], ELLIPSE[:, 1], color='red', alpha=0.7, linewidth=1.5)
-        plt.xlim(-2, 5)  # Setting x-axis limits from -2 to 5
-        plt.ylim(-1, 8)  # Setting y-axis limits from -1 8
-        plt.legend(['State', 'Odom'])
+        plt.quiver(filter.mu[0, 2], filter.mu[1, 2], 10 * filter.mu[0, 0], 10 * filter.mu[1, 0],color='darkblue')
+        plt.xlim(-2, 6)
+        plt.ylim(-1, 7)
+        ax.legend([gt[0], states[0], odoms[0], lmrks], ["GT", "State", "Odometry", "Landmark"])
         plt.savefig('./IMG/{}.png'.format(i))
         if i >= data_len-1:
             if ANIMATE:
                 make_avi()
             else:
                 plt.show()
+        plt.close()
 
 def make_avi():
     print("Making AVI...")

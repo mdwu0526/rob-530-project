@@ -4,10 +4,10 @@ Apriltag landmark localization with a Right Invariant Extended Kalman Filter<br 
 
 Additional Deliverables
 ==
-Code: See above<br />
-Report: See report/ folder<br />
-Slides: See slides/ folder<br />
-Report video: https://www.youtube.com/watch?v=al2p-oy7msg<br />
+<ins>Code:</ins> See above<br />
+<ins>Report:</ins> See report/ folder<br />
+<ins>Slides:</ins> See slides/ folder<br />
+<ins>Report video:</ins> https://www.youtube.com/watch?v=al2p-oy7msg<br />
 
 Dependencies (with tested versions):
 ==

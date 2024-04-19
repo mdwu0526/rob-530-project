@@ -14,15 +14,15 @@ from utils import *
 
 class InEKF:
     def __init__(self, init_state):
-        self.W = np.diag([0.05**2,0.05**2,0.05**2])     # motion noise covariance
-        self.V = 0.3*np.eye(2)                      # measurement noise covariance
+        self.W = np.diag([.0008, .003, .0001])     # motion noise covariance
+        self.V = np.diag([.01, .05])                     # measurement noise covariance
         
         self.mu = pose_mat(init_state)           # init_state will be the first odometry pose
         # SE(2) State
         # cos(theta)  -sin(theta)     x
         # sin(theta)   cos(theta)     y
         #     0           0           1
-        self.Sigma = np.diag([25, 25, 25])
+        self.Sigma = np.diag([0.1, 0.1, 0.1])
         # Covariance Matrix
         # var(x)      0       0
         #   0      var(y)     0

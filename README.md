@@ -12,14 +12,14 @@ Additional Deliverables
 Dependencies (with tested versions):
 ==
   Post-processing:<br />
-    Python (3.8)<br />
-    OpenCV (4.9)<br />
-    Scipy (1.10)<br />
-    Matplotlib (3.1.2)<br />
-    Numpy (1.24)<br />
+    - Python (3.8)<br />
+    - OpenCV (4.9)<br />
+    - Scipy (1.10)<br />
+    - Matplotlib (3.1.2)<br />
+    - Numpy (1.24)<br />
 
   For Apriltags:<br />
-    dt-apriltags (>=3.1)<br />
+    - dt-apriltags (>=3.1)<br />
 
 How to run the code:
 ==

@@ -26,3 +26,8 @@ How to run the code:
 1. Pull the repository from Github/Gitlab<br />
 2. Run run.py script<br />
 $ python3 run.py<br />
+
+Example Results:
+==
+
+![](gif/riekf_localization_se2.gif)

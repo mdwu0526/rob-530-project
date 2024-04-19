@@ -64,7 +64,7 @@ def plotScene(landmarks, state_log, odom_log, filter, i, data_len, ANIMATE):
     if ANIMATE or (i >= data_len-1):
         fig, ax = plt.subplots()
         plt.cla()
-        gt = ax.plot([0, 3.4, 3.4, 0, 0], [0, 0, 5.96, 5.96, 0])
+        gt = ax.plot([0, 1.32, 1.32, 0, 0], [0, 0, 1.04, 1.04, 0])
         states = ax.plot(state_log[0,:], state_log[1,:])
         wedge = Wedge(center=(state_log[0,i], state_log[1,i]), 
                       r=1, 
@@ -80,8 +80,8 @@ def plotScene(landmarks, state_log, odom_log, filter, i, data_len, ANIMATE):
         ELLIPSE = confidence_ellipse(filter.mu, np.linalg.cholesky(filter.Sigma))
         plt.plot(ELLIPSE[:, 0], ELLIPSE[:, 1], color='red', alpha=0.7, linewidth=1.5)
         plt.quiver(filter.mu[0, 2], filter.mu[1, 2], 10 * filter.mu[0, 0], 10 * filter.mu[1, 0],color='darkblue')
-        plt.xlim(-2, 6)
-        plt.ylim(-1, 7)
+        plt.xlim(-1, 2)
+        plt.ylim(-1, 2)
         ax.legend([gt[0], states[0], odoms[0], lmrks], ["GT", "State", "Odometry", "Landmark"])
         plt.savefig('./IMG/{}.png'.format(i))
         if i >= data_len-1:

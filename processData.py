@@ -51,7 +51,7 @@ def mergeData(folder):
 
         # write first row of headers
         writer.writerow(headers)
-        while(odom_i < len(odom_data['utime']) or vel_i < len(vel_data['utime']) or apriltag_i < len(apriltag_data['utime'])-1):
+        while(odom_i < len(odom_data['utime']) - 2 or vel_i < len(vel_data['utime']) - 2 or apriltag_i < len(apriltag_data['utime'])-1):
             # write velocity
             if(vel_data['utime'][vel_i] <= apriltag_data['utime'][apriltag_i] 
                and vel_data['utime'][vel_i] <= odom_data['utime'][odom_i]):
@@ -124,4 +124,4 @@ def getLandmarks(file):
         landmarks[int(data['id'][i])] = np.array([float(data['x'][i]), float(data['y'][i])])
     return(landmarks)
 
-mergeData("data/log7")
+mergeData("data/log12")

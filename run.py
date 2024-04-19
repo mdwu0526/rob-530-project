@@ -3,8 +3,8 @@ from InEkf import *
 from processData import *
 from utils import *
 
-ANIMATE = False
-LOG = "log7"
+ANIMATE = True
+LOG = "log12"
 
 def main():
     csv_filename = 'data/' + LOG + '/log_merged.csv'
@@ -18,7 +18,7 @@ def main():
     last_time = 0
     state_log = np.zeros((2,1))
     odom_log = np.zeros((2,1))
-    for i in range(0,len(data['utime'])):
+    for i in range(0,int(len(data['utime'])/3.3)):
         print(i)
         if data['vel vx'][i] != None:
             curr_time = data['utime'][i]
@@ -46,7 +46,7 @@ def main():
                 odom_log = np.hstack((odom_log, odom.reshape(-1,1)))
 
         
-        plotScene(landmarks, state_log, odom_log, filter, i, len(data['utime']), ANIMATE)
+        plotScene(landmarks, state_log, odom_log, filter, i, int(len(data['utime'])/3.3), ANIMATE)
         
 if __name__ == '__main__':
     main()

@@ -31,3 +31,13 @@ Example Results:
 ==
 
 ![](gif/riekf_localization_se2.gif)
+
+Referenced Works:
+==
+This work builds upon existing work, including: 
+1. https://mbot.robotics.umich.edu/ (the MBot ecosystem)
+2. ROB 530 course staff provided example code and homeworks.
+
+Acknowledgements:
+==
+This work was made possible through the technical support and teachings of Maani Ghaffari and the rest of the ROB 530 instructional team, to whom we extend great thanks!
